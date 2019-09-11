@@ -1,0 +1,81 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+#export DH_OPTIONS=-v
+
+include /usr/share/dpkg/pkg-info.mk
+include /usr/share/dpkg/architecture.mk
+
+ifeq ($(DEB_TARGET_ARCH_ENDIAN),big)
+    CMAKE_WORDS_BIGENDIAN = -DWORDS_BIGENDIAN=1
+endif
+
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+export GMOCK_ROOT=$(CURDIR)/.build/__gtest/googlemock
+export GTEST_ROOT=$(CURDIR)/.build/__gtest/googletest
+export HOME=$(CURDIR)/debian/tmp
+
+export GUILE_AUTO_COMPILE=0
+
+%:
+	dh $@ --buildsystem=cmake --with python3,aqbanking --builddirectory=.build
+
+override_dh_auto_clean:
+	$(RM) -rv .build/__gtest */*/*/.libs */*/.libs
+	find . -type l -exec rm -v \{\} \;
+	rm -fv debian/gnucash-icon-32x32.xpm
+	dh_auto_clean
+
+override_dh_auto_configure:
+	## copy gtest sources
+	mkdir -p .build/__gtest
+	cp -Rv /usr/src/googletest/* .build/__gtest/
+	env    ## debug
+	mkdir -v -p \
+	    "$${HOME}"/.local/share/GnuCash/books \
+	    "$${HOME}"/.local/share/GnuCash/checks \
+	    "$${HOME}"/.local/share/GnuCash/translog
+	dh_auto_configure -- -Wdev \
+               -DCMAKE_VERBOSE_MAKEFILE=ON  \
+               -DCMAKE_BUILD_TYPE=Release   \
+               -DCMAKE_CXX_FLAGS="$(CXXFLAGS) $(CPPFLAGS)" \
+               -DWITH_PYTHON=ON             \
+               -DCMAKE_INSTALL_LIBDIR=/usr/lib/$(DEB_HOST_MULTIARCH)/gnucash \
+               -DGTEST_ROOT=$GTEST_ROOT \
+               -DGMOCK_ROOT=$GMOCK_ROOT \
+               $(CMAKE_WORDS_BIGENDIAN) \
+        ;
+
+override_dh_auto_install:
+	dh_auto_install --max-parallel=1
+
+override_dh_install:
+	$(RM) -fv debian/tmp/usr/share/glib-2.0/schemas/gschemas.compiled  # L:package-contains-compiled-glib-schema
+	pod2man -s1 --stderr --utf8 debian/tmp/usr/bin/gnc-fq-check debian/tmp/gnc-fq-check.1
+	find debian/tmp/usr/lib -name \*.la -exec rm -v \{\} \;
+	dh_install
+
+override_dh_compress:
+	## Don't compress certain files (#895256):
+	dh_compress -XAUTHORS -XDOCUMENTERS -XLICENSE
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	$(MAKE) -C .build check; sh -x -c 'RV=$$0; [ "$${RV}" -eq 0 ] || cat ".build/Testing/Temporary/LastTest.log"; exit $${RV}' $$?
+endif
+
+override_dh_strip:
+	dh_strip --dbgsym-migration='gnucash-dbg (<< 1:2.6.13~)' -X.go
+
+override_dh_gencontrol:
+	dh_gencontrol -- -Vmy:Built-Using="$(foreach pkg,googletest,$(word 2,$(shell dpkg --status $(pkg) | grep ^Package)) (=$(word 2,$(shell dpkg --status $(pkg) | grep Version))),)"
+
+override_dh_makeshlibs:
+	dh_makeshlibs -n --version-info="gnucash (= ${DEB_VERSION})"
+
+override_dh_shlibdeps:
+	dh_shlibdeps
+	rm -f debian/gnucash/DEBIAN/shlibs
