@@ -32,7 +32,7 @@ cd Projects
 mkdir GnuCash
 cd GnuCash</pre></code>
  
-### grab a clone of the GnuCash git repsoitory
+### grab a clone of the GnuCash git repsitory
 <pre><code>git clone https://github.com/Gnucash/gnucash
 cd gnucash
 git checkout 3.5</pre></code># or 3.4 or whichever you desire.  If you want absolute latest then use "git checkout maint" instead.
@@ -49,10 +49,11 @@ MYTAR=${MYRPR}.orig.tar</pre></code>
 sed -e "s/MYVER/${MYVER}/;s/MYDISTRO/$MYDISTRO/" ../debian/changelog > debian/changelog</pre></code>
 
 ### pull in the dependencies as noted in the control file
-<pre><code>sudo mk-build-deps -ir debian/control
+<pre><code>sudo mk-build-deps -ir debian/control</pre></code>
 
 ### Change needed for 3.5 
 you need to manually change line 137 in $HOME/GnuCash/gnucash/common/cmake_modules/GncAddTest.cmake
+
 from:
 <pre><code>set(GTEST_LIB "${GTEST_SHARED_LIB};${GTEST_MAIN_LIB}" PARENT_SCOPE)</pre></code>
 
@@ -83,10 +84,11 @@ I have added a "debian" folder to the "GnuCash" google drive folder that contain
 
 https://drive.google.com/open?id=1s-E6t-snmQiEFaT_hlWF2KHWrIB_LV2x
 
- -- 
+<pre>
 Stephen M Butler, PMP, PSM
 Stephen.M.Butler51@gmail.com
 kg7je@arrl.net
 253-350-0166
 -------------------------------------------
 GnuPG Fingerprint:  8A25 9726 D439 758D D846 E5D4 282A 5477 0385 81D8
+</pre>
