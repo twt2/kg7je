@@ -24,45 +24,50 @@ several web sites that describe the setup for using this).
 The below is the commands that would be used if someone wants to start
 from nothing (copying from notes so please excuse any typos).
 
-## setup the Projects area just in case my presumption is wrong
- cd $HOME
- mkdir Projects
- cd Projects
- mkdir GnuCash
- cd GnuCash
-
-## grab a clone of the GnuCash git repsoitory
- git clone https://github.com/Gnucash/gnucash
- cd gnucash
- git checkout 3.5   # or 3.4 or whichever you desire.  If you want absolute latest then use "git checkout  maint" instead.
- GITVER=$(git describe)
- MYVER=${GITVER%-*}
- MYRPR=gnucash_${MYVER}
- MYTAR=${MYRPR}.orig.tar
-
-## Pick the Ubuntu version for which you want to compile: trusty, xenial, bionic, disco, etc.
- MYDISTRO=trusty
-
-## bring in the debian folder and modify version and distro flags as noted.
- cp -r ../debian .
- sed -e "s/MYVER/${MYVER}/;s/MYDISTRO/$MYDISTRO/" ../debian/changelog > debian/changelog
-
-## pull in the dependencies as noted in the control file
- sudo mk-build-deps -ir debian/control
-## For 3.5 you need to manually change line 137 in $HOME/GnuCash/gnucash/common/cmake_modules/GncAddTest.cmake
- from:       set(GTEST_LIB "${GTEST_SHARED_LIB};${GTEST_MAIN_LIB}" PARENT_SCOPE)
+### setup the Projects area 
+just in case my presumption is wrong
+<pre><code>cd $HOME
+mkdir Projects
+cd Projects
+mkdir GnuCash
+cd GnuCash</pre></code>
  
- to:       set(GTEST_LIB "${GTEST_MAIN_LIB};${GTEST_SHARED_LIB}" PARENT_SCOPE)
+### grab a clone of the GnuCash git repsoitory
+<pre><code>git clone https://github.com/Gnucash/gnucash
+cd gnucash
+git checkout 3.5</pre></code># or 3.4 or whichever you desire.  If you want absolute latest then use "git checkout maint" instead.
+<pre><code>GITVER=$(git describe)
+MYVER=${GITVER%-*}
+MYRPR=gnucash_${MYVER}
+MYTAR=${MYRPR}.orig.tar</pre></code>
 
-## At this point all is ready to build the debian packages
+### Pick the Ubuntu version for which you want to compile: trusty, xenial, bionic, disco, etc.
+<pre><code>MYDISTRO=trusty</pre></code>
 
- dpkg-buildpackage -rfakeroot -b -uc
+### bring in the debian folder and modify version and distro flags as noted.
+<pre><code>cp -r ../debian .
+sed -e "s/MYVER/${MYVER}/;s/MYDISTRO/$MYDISTRO/" ../debian/changelog > debian/changelog</pre></code>
 
-## Identify debian packages
+### pull in the dependencies as noted in the control file
+<pre><code>sudo mk-build-deps -ir debian/control
+
+### Change needed for 3.5 
+you need to manually change line 137 in $HOME/GnuCash/gnucash/common/cmake_modules/GncAddTest.cmake
+from:
+<pre><code>set(GTEST_LIB "${GTEST_SHARED_LIB};${GTEST_MAIN_LIB}" PARENT_SCOPE)</pre></code>
+
+to:
+<pre><code>set(GTEST_LIB "${GTEST_MAIN_LIB};${GTEST_SHARED_LIB}" PARENT_SCOPE)</pre></code>
+
+### At this point all is ready to build the debian packages
+
+<pre><code>dpkg-buildpackage -rfakeroot -b -uc</pre></code>
+
+### Identify debian packages
 
 this will result in 7 files in the GnuCash folder (the parent to the git clone where the above command was run).
-of these, the 3 *.deb files are the debian packages to be installed:
-
+of these, the 3 \*.deb files are the debian packages to be installed:
+<pre><code>
  -rw-r--r-- 1 steve steve    19751 May 21 08:17 gnucash_3.5-0_amd64.buildinfo
  -rw-r--r-- 1 steve steve     2266 May 21 08:17 gnucash_3.5-0_amd64.changes
  -rw-r--r-- 1 steve steve  3957024 May 21 08:17 gnucash_3.5-0_amd64.deb
@@ -70,6 +75,7 @@ of these, the 3 *.deb files are the debian packages to be installed:
  -rw-r--r-- 1 steve steve 20918176 May 21 08:17 gnucash-dbgsym_3.5-0_amd64.ddeb
  -rw-r--r-- 1 steve steve   269932 May 21 08:17 python3-gnucash_3.5-0_amd64.deb
  -rw-r--r-- 1 steve steve   769424 May 21 08:17 python3-gnucash-dbgsym_3.5-0_amd64.ddeb
+</pre></code>
 
 ## Google Drive
 
