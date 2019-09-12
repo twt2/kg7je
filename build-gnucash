@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+#  build-gnucash [ distro ]
+#
+#  Distro of "disco" will be used by default.  Supply alternate distro desired on command line.
+#
+# NOte:  do a git pull followed by git checkout of version desired
+
+cd $HOME/Projects/GnuCash/gnucash
+
+MYDISTRO=$1
+
+if [[ -z $MYDISTRO ]]; then
+  MYDISTRO=disco
+fi
+
+GITVER=$(git describe)
+MYVER=${GITVER%-*}
+MYRPR=gnucash_${MYVER}
+MYTAR=${MYRPR}.orig.tar
+MYDATE=$(date -R)
+
+cp -r ../debian .
+sed -e "s/MYVER/${MYVER}/;s/MYDISTRO/${MYDISTRO}/;s/DATE/${MYDATE}/" ../debian/changelog > debian/changelog
+
+sudo mk-build-deps -ir debian/control
+
+dpkg-buildpackage -rfakeroot -b -uc
+
+# upload resulting three (3) *.deb files to Google Drive under appropriate folder(s)
